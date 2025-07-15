@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Sea Shipping Crisis: An Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Muted Accents -->
+    <!-- Application Structure Plan: The SPA is designed as a top-down narrative dashboard. The user scrolls through a logical story: 1) The 'Crisis' section sets the stage with a timeline. 2) 'The Rerouting' forms the core, using a comparative dashboard (Suez vs. Cape) to show the direct impact on traffic. This is the most data-heavy section and is placed centrally for focus. 3) 'Economic Impact' follows logically, detailing the financial consequences (costs, insurance). 4) 'The New Normal' concludes with the outlook and industry response. This sequential flow guides the user from the cause to the effect and finally to the future outlook, making a complex topic understandable. A sticky nav allows non-linear exploration for users who want to jump to specific data points. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Suez vs. Cape traffic volume. Goal: Compare. Viz: Bar/Donut Charts. Interaction: Hover tooltips. Justification: Bar charts excel at direct comparison of quantities (2023 vs 2024 transits). A donut chart effectively shows the compositional shift in vessel sizes. Library: Chart.js.
+        - Report Info: Increased transit times, fuel use. Goal: Inform/Quantify. Viz: Key Performance Indicator (KPI) cards with large numbers and icons. Interaction: Static display. Justification: KPI cards provide quick, high-impact communication of key metrics. Method: HTML/Tailwind.
+        - Report Info: Freight rate and insurance premium escalation. Goal: Show Change Over Time/Magnitude. Viz: Line/Bar Charts. Interaction: Hover tooltips. Justification: A line chart is ideal for showing the volatility of freight rates over time. A simple bar chart clearly illustrates the dramatic percentage increase in insurance premiums. Library: Chart.js.
+        - Report Info: Timeline of events. Goal: Organize. Viz: Vertical timeline. Interaction: Scroll-based reveal. Justification: A timeline visually organizes sequential events, making the escalation of the crisis easy to follow. Method: HTML/Tailwind.
+        - Report Info: Industry impacts and resilience strategies. Goal: Inform/Summarize. Viz: Thematic text blocks with icons. Interaction: Static display. Justification: Complex qualitative information is best summarized in clean, readable text sections, enhanced with icons for visual appeal. Method: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 384px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D97706; /* Amber-600 */
+            border-bottom-color: #D97706;
+        }
+        .kpi-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #E5E7EB;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -31px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #D97706; /* Amber-600 */
+            border: 4px solid #F8F7F4;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-200">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Red Sea Trade Analysis</h1>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#crisis" class="nav-link font-medium text-gray-600 pb-1">The Crisis</a>
+                    <a href="#rerouting" class="nav-link font-medium text-gray-600 pb-1">The Rerouting</a>
+                    <a href="#impact" class="nav-link font-medium text-gray-600 pb-1">Economic Impact</a>
+                    <a href="#outlook" class="nav-link font-medium text-gray-600 pb-1">The New Normal</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+
+        <section id="intro" class="text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">Navigating Turbulent Waters</h2>
+            <p class="max-w-4xl mx-auto text-lg md:text-xl text-gray-600">
+                An interactive analysis of the unprecedented disruption in the Red Sea and Suez Canal from 2023-2025. Explore how geopolitical events reshaped global trade, rerouted thousands of vessels, and triggered significant economic consequences worldwide.
+            </p>
+        </section>
+
+        <section id="crisis" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-800">The Crisis Unfolds</h3>
+                <p class="mt-2 text-lg text-gray-600 max-w-3xl mx-auto">The escalation of Houthi attacks transformed a vital trade artery into a high-risk zone. This timeline traces the key events that triggered a global shipping crisis.</p>
+            </div>
+            <div class="relative max-w-2xl mx-auto">
+                <div class="absolute left-[-1.2rem] md:left-[-1.4rem] h-full border-l-2 border-dashed border-gray-300"></div>
+                <div id="timeline-container" class="space-y-12">
+                </div>
+            </div>
+        </section>
+
+        <section id="rerouting" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-800">The Great Rerouting</h3>
+                <p class="mt-2 text-lg text-gray-600 max-w-3xl mx-auto">In response to the threats, the global shipping industry enacted a historic pivot. This section visually compares the dramatic traffic shifts away from the Suez Canal to the longer Cape of Good Hope route.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <h4 class="text-2xl font-bold text-center mb-2 text-red-700">Suez Canal: Traffic Plummeted</h4>
+                    <p class="text-center text-gray-600 mb-6">The primary artery saw a dramatic decline in vessel transits, especially large container ships.</p>
+                    <div class="chart-container">
+                        <canvas id="suezTransitsChart"></canvas>
+                    </div>
+                    <p class="text-center mt-4 text-sm text-gray-500">Total vessel transits saw a 50% year-on-year drop in 2024.</p>
+                    <div class="chart-container mt-8">
+                        <canvas id="suezVesselMixChart"></canvas>
+                    </div>
+                     <p class="text-center mt-4 text-sm text-gray-500">In early 2025, smaller sub-Panamax ships, historically 10-15% of traffic, made up over 70% of container transits. ULCS and Megamax vessels disappeared completely.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <h4 class="text-2xl font-bold text-center mb-2 text-green-700">Cape of Good Hope: The New Highway</h4>
+                     <p class="text-center text-gray-600 mb-6">The longer, more expensive route around Africa became the dominant choice for safety.</p>
+                     <div class="space-y-6">
+                        <div class="kpi-card">
+                            <h5 class="text-gray-500 font-medium">Traffic Increase (2024)</h5>
+                            <p class="text-3xl font-bold text-gray-800 flex items-baseline">~200% <span class="text-lg font-medium ml-2">surge in traffic</span></p>
+                        </div>
+                        <div class="kpi-card">
+                            <h5 class="text-gray-500 font-medium">Longer Journeys</h5>
+                            <p class="text-3xl font-bold text-gray-800 flex items-baseline">10-25 <span class="text-lg font-medium ml-2">extra days</span></p>
+                        </div>
+                        <div class="kpi-card">
+                            <h5 class="text-gray-500 font-medium">Increased Fuel & Emissions</h5>
+                            <p class="text-3xl font-bold text-gray-800 flex items-baseline">40% <span class="text-lg font-medium ml-2">more fuel per trip</span></p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-800">The Economic Ripple Effect</h3>
+                <p class="mt-2 text-lg text-gray-600 max-w-3xl mx-auto">The rerouting was not without cost. Explore the staggering financial consequences, from skyrocketing freight and insurance rates to severe impacts on national economies and major industries.</p>
+            </div>
+             <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <h4 class="text-xl font-bold text-center mb-4 text-gray-800">Freight Rates Surge</h4>
+                    <div class="chart-container">
+                        <canvas id="freightRatesChart"></canvas>
+                    </div>
+                     <p class="text-center mt-4 text-sm text-gray-500">Asia-Europe container rates surged by 200-400%, with volatility expected to continue.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <h4 class="text-xl font-bold text-center mb-4 text-gray-800">War Risk Insurance Premiums</h4>
+                    <div class="chart-container">
+                        <canvas id="insurancePremiumsChart"></canvas>
+                    </div>
+                     <p class="text-center mt-4 text-sm text-gray-500">Premiums for Red Sea transits skyrocketed from 0.07% to as high as 2% of a ship's value.</p>
+                </div>
+            </div>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="kpi-card">
+                    <h5 class="text-lg font-semibold text-gray-800">Egypt's Revenue Loss</h5>
+                    <p class="text-gray-600 mt-1">Suez Canal revenues fell from $9.4B to $7.2B in one fiscal year, a loss of over 23%.</p>
+                </div>
+                 <div class="kpi-card">
+                    <h5 class="text-lg font-semibold text-gray-800">Automotive Delays</h5>
+                    <p class="text-gray-600 mt-1">Just-in-time manufacturing was hit hard, with brands like Tesla and Kia halting production due to parts shortages.</p>
+                </div>
+                 <div class="kpi-card">
+                    <h5 class="text-lg font-semibold text-gray-800">Retail & Consumer Goods</h5>
+                    <p class="text-gray-600 mt-1">Companies like IKEA and Walmart faced delivery delays, leading to potential price hikes and product shortages.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+            <div class="text-center mb-8">
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-800">The New Normal: Resilience Over Efficiency</h3>
+                <p class="mt-2 text-lg text-gray-600 max-w-3xl mx-auto">The industry is adapting to a prolonged period of uncertainty. The focus has shifted from pure cost-efficiency to building resilient, diversified, and technologically-advanced supply chains.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div>
+                     <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600 mb-4 text-2xl font-bold">1</div>
+                    <h4 class="text-xl font-semibold mb-2">Diversified Supply Chains</h4>
+                    <p class="text-gray-600">Companies are accelerating "China+1" and nearshoring strategies, developing alternative suppliers in Mexico, Vietnam, and India to reduce reliance on single regions.</p>
+                </div>
+                <div>
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600 mb-4 text-2xl font-bold">2</div>
+                    <h4 class="text-xl font-semibold mb-2">Strategic Inventory</h4>
+                    <p class="text-gray-600">The just-in-time model is giving way to holding larger safety stockpiles closer to key markets to buffer against unpredictable shipping delays.</p>
+                </div>
+                <div>
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600 mb-4 text-2xl font-bold">3</div>
+                    <h4 class="text-xl font-semibold mb-2">Digital Transformation</h4>
+                    <p class="text-gray-600">Investment in real-time tracking, predictive analytics, and logistics visibility platforms is surging to better anticipate and mitigate future disruptions.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-16 border-t">
+        <div class="container mx-auto px-6 py-6 text-center text-gray-500">
+            <p>This interactive analysis is based on the report "Navigating Turbulent Waters: A Comparative Analysis of Ship Trade and Routes in the Red Sea and Suez Canal (2023-2025)".</p>
+            <p>&copy; 2025 Interactive Maritime Analytics. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const timelineData = [
+                { date: "Nov 2023", event: "Crisis Begins", description: "Houthi rebels begin attacks on commercial ships in the Red Sea, hijacking the Galaxy Leader." },
+                { date: "Dec 2023", event: "Attacks Broaden", description: "Targeting expands to all vessels destined for Israeli ports. Insurance premiums begin to spike." },
+                { date: "Jan 2024", event: "International Response", description: "The US launches Operation Prosperity Guardian. A large-scale Houthi assault is intercepted." },
+                { date: "Mar 2024", event: "Rerouting Intensifies", description: "Over 2,000 ships have now diverted from the Red Sea. Coalition forces conduct airstrikes in Yemen." },
+                { date: "Jul 2025", event: "Renewed Attacks", description: "Despite ceasefire attempts, attacks resume with increased lethality, sinking the Magic Seas." },
+                { date: "Late 2025", event: "Outlook: 'New Normal'", description: "Major carriers confirm they do not expect to return to the Red Sea in 2025, solidifying the Cape route as the primary alternative." }
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach(item => {
+                const timelineElement = `
+                    <div class="relative pl-8">
+                        <div class="timeline-item">
+                            <p class="font-bold text-amber-600">${item.date} - ${item.event}</p>
+                            <p class="mt-1 text-gray-600">${item.description}</p>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.innerHTML += timelineElement;
+            });
+
+            const ctxSuezTransits = document.getElementById('suezTransitsChart').getContext('2d');
+            new Chart(ctxSuezTransits, {
+                type: 'bar',
+                data: {
+                    labels: ['2023', '2024'],
+                    datasets: [{
+                        label: 'Total Vessel Transits',
+                        data: [26434, 13213],
+                        backgroundColor: ['rgba(59, 130, 246, 0.6)', 'rgba(239, 68, 68, 0.6)'],
+                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Suez Canal Annual Vessel Transits' },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of Vessels' } }
+                    }
+                }
+            });
+            
+            const ctxSuezVesselMix = document.getElementById('suezVesselMixChart').getContext('2d');
+            new Chart(ctxSuezVesselMix, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sub-Panamax (<4,000 TEU)', 'Larger Vessels (>4,000 TEU)'],
+                    datasets: [{
+                        data: [70.6, 29.4],
+                        backgroundColor: ['rgba(239, 68, 68, 0.6)', 'rgba(209, 213, 219, 0.6)'],
+                        borderColor: ['rgba(239, 68, 68, 1)', 'rgba(156, 163, 175, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Container Ship Mix (Jan-Apr 2025)' },
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            const ctxFreightRates = document.getElementById('freightRatesChart').getContext('2d');
+            new Chart(ctxFreightRates, {
+                type: 'line',
+                data: {
+                    labels: ['Pre-Crisis', 'Feb 2024', 'Jul 2024', 'Late 2024'],
+                    datasets: [{
+                        label: 'Asia-Europe Container Rate ($/FEU)',
+                        data: [1500, 5500, 8400, 3523],
+                        fill: true,
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Cost per 40ft Container (FEU)' },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'USD ($)' } }
+                    }
+                }
+            });
+
+            const ctxInsurance = document.getElementById('insurancePremiumsChart').getContext('2d');
+            new Chart(ctxInsurance, {
+                type: 'bar',
+                data: {
+                    labels: ['Pre-Crisis Premium', 'Crisis Peak Premium'],
+                    datasets: [{
+                        label: 'Premium as % of Ship\'s Value',
+                        data: [0.07, 2.0],
+                        backgroundColor: ['rgba(59, 130, 246, 0.6)', 'rgba(239, 68, 68, 0.6)'],
+                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'War Risk Premium (% of Hull Value)' },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Percentage (%)' } }
+                    }
+                }
+            });
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px' });
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+
+</body>
+</html>
